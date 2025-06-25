@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:notehub_app/core/extensions.dart';
 import 'package:notehub_app/presentation/authen/sign_up_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -32,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
               TextFormField(
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 decoration: InputDecoration(
-                  hintText: 'Username',
+                  hintText: 'Email',
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.grey),
@@ -58,7 +59,9 @@ class _LoginPageState extends State<LoginPage> {
                 focusNode: _emailNode,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter username';
+                    return 'Please enter email';
+                  } else if (!value.isValidEmail()) {
+                    return 'Email invalid';
                   }
                   return null;
                 },

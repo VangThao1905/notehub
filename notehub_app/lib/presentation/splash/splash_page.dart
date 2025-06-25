@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:notehub_app/core/assets_path.dart';
 import 'package:notehub_app/presentation/authen/login_page.dart';
@@ -16,19 +17,19 @@ class _SplashPageState extends State<SplashPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(Duration(seconds: 3), () {
         /// Check da login chua
-        // bool isLogged = false;
-
-        // if(isLogged){
-        // Navigator.push(
-        //     context,
-        //     MaterialPageRoute(builder: (context) => const HomePage()),
-        //   );
-        // }else{
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginPage()),
-        );
-        // }
+        FirebaseAuth.instance.authStateChanges().listen((User? user) {
+          if (user == null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+            );
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const HomePage()),
+            );
+          }
+        });
       });
     });
     super.initState();
