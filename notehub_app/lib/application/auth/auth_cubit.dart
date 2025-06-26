@@ -12,11 +12,32 @@ class AuthCubit extends Cubit<AuthState> {
     required String email,
     required String password,
   }) async {
+    emit(state.copyWith(isShowLoading: true));
     final result = await GetIt.I.get<IAuthRepo>().signUp(
       email: email,
       password: password,
     );
+    emit(state.copyWith(isShowLoading: false));
+    return result.fold(
+      () {
+        return '';
+      },
+      (errorMessage) {
+        return errorMessage;
+      },
+    );
+  }
 
+  Future<String> signIn({
+    required String email,
+    required String password,
+  }) async {
+    emit(state.copyWith(isShowLoading: true));
+    final result = await GetIt.I.get<IAuthRepo>().signIn(
+      email: email,
+      password: password,
+    );
+    emit(state.copyWith(isShowLoading: false));
     return result.fold(
       () {
         return '';

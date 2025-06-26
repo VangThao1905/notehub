@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:injectable/injectable.dart';
@@ -25,6 +27,31 @@ class AuthRepoImpl implements IAuthRepo {
       }
       return some('Something went wrong');
     } catch (e) {
+      return some('Something went wrong');
+    }
+  }
+
+  @override
+  Future<Option<String>> signIn({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      if (credential.user != null) {
+        return none();
+      }
+      return some('Something went wrong');
+    } on FirebaseAuthException catch (e) {
+      log('signIn error:${e.toString()}');
+      if (e.code == 'user-not-found') {
+        return some('User not found');
+      } else if (e.code == 'wrong-password') {
+        return some('wrong-password');
+      }
       return some('Something went wrong');
     }
   }

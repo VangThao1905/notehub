@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:notehub_app/presentation/splash/splash_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'core/injectable.dart';
@@ -23,6 +24,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
       home: SplashPage(),
+      builder: EasyLoading.init(),
     );
   }
 }

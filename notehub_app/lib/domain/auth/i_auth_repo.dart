@@ -5,4 +5,9 @@ abstract class IAuthRepo {
     required String email,
     required String password,
   });
+
+  Future<Option<String>> signIn({
+    required String email,
+    required String password,
+  });
 }
