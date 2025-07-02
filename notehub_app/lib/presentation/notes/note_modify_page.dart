@@ -11,12 +11,17 @@ import 'package:notehub_app/application/note_modify/note_modify_state.dart';
 import 'package:notehub_app/domain/notes/note_model.dart';
 
 class NoteModifyPage extends StatefulWidget {
-  const NoteModifyPage({super.key});
+  const NoteModifyPage({super.key, required this.note});
 
-  static dynamic show(BuildContext context) {
+  final NoteModel note;
+
+  static dynamic show(
+    BuildContext context, {
+    NoteModel note = const NoteModel(),
+  }) {
     return Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const NoteModifyPage()),
+      MaterialPageRoute(builder: (context) => NoteModifyPage(note: note)),
     );
   }
 
@@ -35,13 +40,23 @@ class _NoteModifyPageState extends State<NoteModifyPage> {
   @override
   void initState() {
     _noteModifyCubit.init();
+    _initFieldsValue();
     super.initState();
+  }
+
+  void _initFieldsValue() {
+    _noteTitleTEC.text = widget.note.title;
+    _noteContentTEC.text = widget.note.content;
+    _noteModifyCubit.updateSelectedTag(widget.note.tag);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Add note'), leading: BackButton()),
+      appBar: AppBar(
+        title: Text(widget.note.id != 0 ? 'Edit note' : 'Add note'),
+        leading: BackButton(),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: BlocConsumer<NoteModifyCubit, NoteModifyState>(
@@ -62,7 +77,13 @@ class _NoteModifyPageState extends State<NoteModifyPage> {
                 Center(
                   child: Row(
                     children: [
-                      if (state.imagePath.isNotEmpty) ...{
+                      if (widget.note.image.isNotEmpty) ...{
+                        Image.network(
+                          widget.note.image,
+                          width: 120,
+                          height: 120,
+                        ),
+                      } else if (state.imagePath.isNotEmpty) ...{
                         Image.file(
                           File(state.imagePath),
                           width: 120,
@@ -178,35 +199,71 @@ class _NoteModifyPageState extends State<NoteModifyPage> {
                   ],
                 ),
                 SizedBox(height: 12),
-                Center(
-                  child: FilledButton(
-                    onPressed: () async {
-                      int id = UniqueKey().hashCode;
-                      String title = _noteTitleTEC.text.trim();
-                      String content = _noteContentTEC.text.trim();
-                      NoteModel note = NoteModel(
-                        id: id,
-                        title: title,
-                        content: content,
-                        createAt: DateTime.now().toUtc().toString(),
-                        tag: state.selectedTag,
-                      );
+                if (widget.note.id != 0) ...{
+                  Center(
+                    child: FilledButton(
+                      onPressed: () async {
+                        String title = _noteTitleTEC.text.trim();
+                        String content = _noteContentTEC.text.trim();
+                        NoteModel note = NoteModel(
+                          id: widget.note.id,
+                          title: title,
+                          content: content,
+                          createAt: widget.note.createAt,
+                          updateAt: DateTime.now().toUtc().toString(),
+                          tag: state.selectedTag,
+                        );
 
-                      bool isAddNoteSucces = await _noteModifyCubit.addNote(
-                        note: note,
-                        image: File(state.imagePath),
-                      );
+                        bool isUpdateNoteSuccess = await _noteModifyCubit
+                            .updateNote(
+                              note: note,
+                              image:
+                                  state.imagePath.isNotEmpty
+                                      ? File(state.imagePath)
+                                      : null,
+                            );
 
-                      if (isAddNoteSucces) {
-                        // Navigator.of(context).pop();
-                        EasyLoading.showSuccess('Add note success');
-                      } else {
-                        EasyLoading.showSuccess('Add note failure');
-                      }
-                    },
-                    child: Text('Add'),
+                        if (isUpdateNoteSuccess) {
+                          Navigator.of(context).pop();
+                          EasyLoading.showSuccess('Update note success');
+                        } else {
+                          EasyLoading.showSuccess('Update note failure');
+                        }
+                      },
+                      child: Text('Update note'),
+                    ),
                   ),
-                ),
+                } else ...{
+                  Center(
+                    child: FilledButton(
+                      onPressed: () async {
+                        int id = UniqueKey().hashCode;
+                        String title = _noteTitleTEC.text.trim();
+                        String content = _noteContentTEC.text.trim();
+                        NoteModel note = NoteModel(
+                          id: id,
+                          title: title,
+                          content: content,
+                          createAt: DateTime.now().toUtc().toString(),
+                          tag: state.selectedTag,
+                        );
+
+                        bool isAddNoteSucces = await _noteModifyCubit.addNote(
+                          note: note,
+                          image: File(state.imagePath),
+                        );
+
+                        if (isAddNoteSucces) {
+                          Navigator.of(context).pop();
+                          EasyLoading.showSuccess('Add note success');
+                        } else {
+                          EasyLoading.showSuccess('Add note failure');
+                        }
+                      },
+                      child: Text('Add'),
+                    ),
+                  ),
+                },
               ],
             );
           },

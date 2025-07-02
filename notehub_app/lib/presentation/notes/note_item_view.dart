@@ -1,23 +1,30 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:get_it/get_it.dart';
+import 'package:intl/intl.dart';
+import 'package:notehub_app/application/note/note_cubit.dart';
+import 'package:notehub_app/application/note_modify/note_modify_cubit.dart';
 import 'package:notehub_app/core/assets_path.dart';
 import 'package:notehub_app/domain/notes/note_model.dart';
+import 'package:notehub_app/presentation/notes/note_modify_page.dart';
 
 class NoteItemView extends StatelessWidget {
-  NoteItemView({super.key, required this.note});
+  NoteItemView({super.key, required this.note, required this.noteCubit});
 
   NoteModel note;
+  final NoteCubit noteCubit;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: (){
-
+      onTap: () async {
+        await NoteModifyPage.show(context, note: note);
       },
-      onLongPress: () {
-        log('Log aaaaa');
-        showConfirmDeleteDialog(context);
+      onLongPress: () async {
+        await showConfirmDeleteDialog(context);
+        await noteCubit.init();
       },
       child: Card(
         elevation: 12,
@@ -25,7 +32,11 @@ class NoteItemView extends StatelessWidget {
           padding: const EdgeInsets.all(8.0),
           child: Row(
             children: [
-              Image.asset(AssetsPath.imgNoteHub, width: 76, height: 76),
+              note.image.isNotEmpty
+                  ? Image.network(note.image, width: 76, height: 76)
+                  : Image.asset(AssetsPath.imgNoteHub, width: 76, height: 76),
+
+              SizedBox(width: 12),
               Expanded(
                 flex: 5,
                 child: Column(
@@ -66,7 +77,14 @@ class NoteItemView extends StatelessWidget {
                   ],
                 ),
               ),
-              Expanded(flex: 3, child: Text(note.createAt)),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  DateFormat(
+                    'dd/MM/yyyy hh:mm a',
+                  ).format(DateTime.parse(note.createAt)),
+                ),
+              ),
             ],
           ),
         ),
@@ -74,8 +92,8 @@ class NoteItemView extends StatelessWidget {
     );
   }
 
-  void showConfirmDeleteDialog(BuildContext context) {
-    showDialog(
+  Future<void> showConfirmDeleteDialog(BuildContext context) async {
+    await showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
@@ -88,7 +106,20 @@ class NoteItemView extends StatelessWidget {
                 },
                 child: Text('Cancel'),
               ),
-              FilledButton(onPressed: () {}, child: Text('Confirm')),
+              FilledButton(
+                onPressed: () async {
+                  bool deleteResult = await GetIt.I
+                      .get<NoteModifyCubit>()
+                      .deleteNote(note.id);
+                  if (deleteResult) {
+                    Navigator.of(context).pop();
+                    EasyLoading.showSuccess('Delete note success');
+                  } else {
+                    EasyLoading.showError('Delete note error');
+                  }
+                },
+                child: Text('Confirm'),
+              ),
             ],
           ),
     );

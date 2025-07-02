@@ -1,10 +1,9 @@
-import 'dart:developer';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:notehub_app/domain/notes/note_model.dart';
-import 'package:notehub_app/presentation/home_page.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:get_it/get_it.dart';
+import 'package:notehub_app/application/note/note_cubit.dart';
+import 'package:notehub_app/application/note/note_state.dart';
 import 'package:notehub_app/presentation/notes/note_item_view.dart';
 import 'package:notehub_app/presentation/notes/note_modify_page.dart';
 
@@ -16,36 +15,16 @@ class NotesPage extends StatefulWidget {
 }
 
 class _NotesPageState extends State<NotesPage> {
-  final List<NoteModel> notes = [
-    NoteModel(
-      id: 0,
-      title: 'Go shopping',
-      content: 'I will go shopping at 6 pm',
-      createAt: DateTime.now().toString(),
-      tag: 'Shopping',
-    ),
-    NoteModel(
-      id: 1,
-      title: 'Learning english',
-      content: 'I will learning english on Monday',
-      createAt: DateTime.now().toString(),
-      tag: 'Learning',
-    ),
-    NoteModel(
-      id: 3,
-      title: 'Go fishing',
-      content: 'I will go out and fishing',
-      createAt: DateTime.now().toString(),
-      tag: 'Entertainment',
-    ),
-    NoteModel(
-      id: 4,
-      title: 'Test ne',
-      content: 'This is test',
-      createAt: DateTime.now().toString(),
-      tag: 'Test',
-    ),
-  ];
+  final NoteCubit _noteCubit = GetIt.I.get<NoteCubit>();
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _noteCubit.init();
+    });
+
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,22 +34,40 @@ class _NotesPageState extends State<NotesPage> {
         title: Text('Notes'),
         actions: [
           IconButton(
-            onPressed: () {
-              NoteModifyPage.show(context);
+            onPressed: () async {
+              await NoteModifyPage.show(context);
+              await _noteCubit.init();
             },
             icon: Icon(Icons.add),
           ),
         ],
       ),
       body: Center(
-        child: ListView.separated(
-          itemBuilder: (context, index) {
-            return NoteItemView(note: notes[index]);
+        child: BlocConsumer<NoteCubit, NoteState>(
+          bloc: _noteCubit,
+          listener: (context, state) {
+            if (state.isShowLoading) {
+              EasyLoading.show();
+            } else {
+              EasyLoading.dismiss();
+            }
           },
-          separatorBuilder: (context, index) {
-            return SizedBox(height: 8);
+          listenWhen: (pre, curr) => true,
+          buildWhen: (pre, curr) => true,
+          builder: (context, state) {
+            return ListView.separated(
+              itemBuilder: (context, index) {
+                return NoteItemView(
+                  note: state.notes[index],
+                  noteCubit: _noteCubit,
+                );
+              },
+              separatorBuilder: (context, index) {
+                return SizedBox(height: 8);
+              },
+              itemCount: state.notes.length,
+            );
           },
-          itemCount: notes.length,
         ),
       ),
     );

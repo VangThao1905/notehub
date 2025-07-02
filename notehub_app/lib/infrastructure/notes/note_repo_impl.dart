@@ -13,6 +13,24 @@ import 'package:notehub_app/domain/notes/note_model.dart';
 @Injectable(as: INoteRepo)
 class NoteRepoImpl implements INoteRepo {
   @override
+  Future<List<NoteModel>> getNotes() async {
+    List<NoteModel> notes = [];
+    try {
+      await FirebaseFirestore.instance.collection('NOTES').get().then((
+        querySnapshot,
+      ) {
+        for (var query in querySnapshot.docs) {
+          notes.add(NoteModel.fromJson(query.data()));
+        }
+      });
+      return notes;
+    } catch (e) {
+      log('getNotes error:${e.toString()}');
+      return [];
+    }
+  }
+
+  @override
   Future<bool> addNote({required NoteModel note, required File image}) async {
     log('addNote repo');
     try {
@@ -29,7 +47,7 @@ class NoteRepoImpl implements INoteRepo {
       note = note.copyWith(image: downloadUrl);
 
       /// Add note to cloud fire store
-      FirebaseFirestore.instance
+      await FirebaseFirestore.instance
           .collection('NOTES')
           .doc(note.id.toString())
           .set(note.toJson())
@@ -84,7 +102,7 @@ class NoteRepoImpl implements INoteRepo {
         note = note.copyWith(image: downloadUrl);
 
         /// Add note to cloud fire store
-        FirebaseFirestore.instance
+        await FirebaseFirestore.instance
             .collection('NOTES')
             .doc(note.id.toString())
             .update(note.toJson())
@@ -92,7 +110,7 @@ class NoteRepoImpl implements INoteRepo {
               return Future.value(true);
             });
       } catch (e) {
-        log('addNote error:${e.toString()}');
+        log('updateNote error:${e.toString()}');
         return Future.value(false);
       }
       return Future.value(false);
@@ -107,7 +125,7 @@ class NoteRepoImpl implements INoteRepo {
               return Future.value(true);
             });
       } catch (e) {
-        log('addNote error:${e.toString()}');
+        log('updateNote error:${e.toString()}');
         return Future.value(false);
       }
       return Future.value(false);
