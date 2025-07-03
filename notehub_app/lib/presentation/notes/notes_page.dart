@@ -6,6 +6,7 @@ import 'package:notehub_app/application/note/note_cubit.dart';
 import 'package:notehub_app/application/note/note_state.dart';
 import 'package:notehub_app/presentation/notes/note_item_view.dart';
 import 'package:notehub_app/presentation/notes/note_modify_page.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -16,6 +17,9 @@ class NotesPage extends StatefulWidget {
 
 class _NotesPageState extends State<NotesPage> {
   final NoteCubit _noteCubit = GetIt.I.get<NoteCubit>();
+  final RefreshController _refreshController = RefreshController(
+    initialRefresh: false,
+  );
 
   @override
   void initState() {
@@ -26,48 +30,60 @@ class _NotesPageState extends State<NotesPage> {
     super.initState();
   }
 
+  Future<void> _onRefresh() async {
+    await _noteCubit.init();
+    _refreshController.refreshCompleted();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text('Notes'),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              await NoteModifyPage.show(context);
-              await _noteCubit.init();
-            },
-            icon: Icon(Icons.add),
-          ),
-        ],
-      ),
-      body: Center(
-        child: BlocConsumer<NoteCubit, NoteState>(
-          bloc: _noteCubit,
-          listener: (context, state) {
-            if (state.isShowLoading) {
-              EasyLoading.show();
-            } else {
-              EasyLoading.dismiss();
-            }
-          },
-          listenWhen: (pre, curr) => true,
-          buildWhen: (pre, curr) => true,
-          builder: (context, state) {
-            return ListView.separated(
-              itemBuilder: (context, index) {
-                return NoteItemView(
-                  note: state.notes[index],
-                  noteCubit: _noteCubit,
+    return SmartRefresher(
+      controller: _refreshController,
+      onRefresh: _onRefresh,
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: Text('Notes'),
+          actions: [
+            IconButton(
+              onPressed: () async {
+                await NoteModifyPage.show(context);
+                await _noteCubit.init();
+              },
+              icon: Icon(Icons.add),
+            ),
+          ],
+        ),
+        body: Container(
+          padding: EdgeInsets.only(top: 16),
+          child: Center(
+            child: BlocConsumer<NoteCubit, NoteState>(
+              bloc: _noteCubit,
+              listener: (context, state) {
+                if (state.isShowLoading) {
+                  EasyLoading.show();
+                } else {
+                  EasyLoading.dismiss();
+                }
+              },
+              listenWhen: (pre, curr) => true,
+              buildWhen: (pre, curr) => true,
+              builder: (context, state) {
+                return ListView.separated(
+                  itemBuilder: (context, index) {
+                    return NoteItemView(
+                      note: state.notes[index],
+                      noteCubit: _noteCubit,
+                    );
+                  },
+                  separatorBuilder: (context, index) {
+                    return SizedBox(height: 8);
+                  },
+                  itemCount: state.notes.length,
                 );
               },
-              separatorBuilder: (context, index) {
-                return SizedBox(height: 8);
-              },
-              itemCount: state.notes.length,
-            );
-          },
+            ),
+          ),
         ),
       ),
     );
