@@ -15,6 +15,7 @@ import 'package:notehub_app/application/auth/auth_cubit.dart' as _i516;
 import 'package:notehub_app/application/note/note_cubit.dart' as _i601;
 import 'package:notehub_app/application/note_modify/note_modify_cubit.dart'
     as _i958;
+import 'package:notehub_app/application/profile/profile_cubit.dart' as _i644;
 import 'package:notehub_app/domain/auth/i_auth_repo.dart' as _i228;
 import 'package:notehub_app/domain/notes/i_note_repo.dart' as _i567;
 import 'package:notehub_app/infrastructure/auth/auth_repo_impl.dart' as _i638;
@@ -29,6 +30,7 @@ extension GetItInjectableX on _i174.GetIt {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     gh.factory<_i516.AuthCubit>(() => _i516.AuthCubit());
     gh.factory<_i601.NoteCubit>(() => _i601.NoteCubit());
+    gh.factory<_i644.ProfileCubit>(() => _i644.ProfileCubit());
     gh.factory<_i228.IAuthRepo>(() => _i638.AuthRepoImpl());
     gh.factory<_i567.INoteRepo>(() => _i283.NoteRepoImpl());
     gh.factory<_i958.NoteModifyCubit>(
