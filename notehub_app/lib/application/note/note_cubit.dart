@@ -12,9 +12,17 @@ class NoteCubit extends Cubit<NoteState> {
   NoteCubit() : super(NoteState());
 
   Future<void> init() async {
-    log('init note');
     emit(state.copyWith(isShowLoading: true));
     List<NoteModel> notes = await GetIt.I.get<INoteRepo>().getNotes();
+
+    emit(state.copyWith(notes: notes, isShowLoading: false));
+  }
+
+  Future<void> search({required String keyword}) async {
+    emit(state.copyWith(isShowLoading: true));
+    List<NoteModel> notes = await GetIt.I.get<INoteRepo>().searchNotes(
+      keyword: keyword,
+    );
 
     emit(state.copyWith(notes: notes, isShowLoading: false));
   }

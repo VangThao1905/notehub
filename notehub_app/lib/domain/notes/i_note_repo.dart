@@ -5,6 +5,8 @@ import 'package:notehub_app/domain/notes/note_model.dart';
 abstract class INoteRepo {
   Future<List<NoteModel>> getNotes();
 
+  Future<List<NoteModel>> searchNotes({required String keyword});
+
   Future<bool> addNote({required NoteModel note, required File image});
 
   Future<bool> updateNote({required NoteModel note, required File? image});

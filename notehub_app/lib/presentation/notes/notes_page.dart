@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -20,6 +22,7 @@ class _NotesPageState extends State<NotesPage> {
   final RefreshController _refreshController = RefreshController(
     initialRefresh: false,
   );
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -43,7 +46,23 @@ class _NotesPageState extends State<NotesPage> {
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          title: Text('Notes'),
+          title: SearchBar(
+            controller: _searchController,
+            hintText: 'Search by title or tag...',
+            elevation: WidgetStateProperty.all(4),
+            leading: Icon(Icons.search),
+            onSubmitted: (keyword) {
+              _noteCubit.search(keyword: keyword);
+            },
+            trailing: [
+              InkWell(
+                onTap: () {
+                  _searchController.clear();
+                },
+                child: Icon(Icons.close, color: Colors.red),
+              ),
+            ],
+          ),
           actions: [
             IconButton(
               onPressed: () async {
@@ -55,6 +74,7 @@ class _NotesPageState extends State<NotesPage> {
           ],
         ),
         body: Container(
+          margin: EdgeInsets.only(top: 16),
           padding: EdgeInsets.only(top: 16),
           child: Center(
             child: BlocConsumer<NoteCubit, NoteState>(

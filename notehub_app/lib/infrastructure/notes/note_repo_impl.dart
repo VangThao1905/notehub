@@ -31,6 +31,28 @@ class NoteRepoImpl implements INoteRepo {
   }
 
   @override
+  Future<List<NoteModel>> searchNotes({required String keyword}) async {
+    List<NoteModel> notes = [];
+    try {
+      await FirebaseFirestore.instance.collection('NOTES').get().then((
+        querySnapshot,
+      ) {
+        for (var query in querySnapshot.docs) {
+          NoteModel noteModel = NoteModel.fromJson(query.data());
+          if (noteModel.title.toLowerCase().contains(keyword) ||
+              noteModel.tag.toLowerCase().contains(keyword)) {
+            notes.add(NoteModel.fromJson(query.data()));
+          }
+        }
+      });
+      return notes;
+    } catch (e) {
+      log('searchNotes error:${e.toString()}');
+      return [];
+    }
+  }
+
+  @override
   Future<bool> addNote({required NoteModel note, required File image}) async {
     log('addNote repo');
     try {
